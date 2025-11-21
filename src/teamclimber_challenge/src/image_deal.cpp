@@ -192,11 +192,11 @@ void vision_node::callback_camera(sensor_msgs::msg::Image::SharedPtr msg)
         // 标注序号
         std::string point_text = std::to_string(j + 1);
         cv::putText(
-            result_image, point_text, cv::Point(armor_points[j].x + 10, armor_points[j].y - 10),
-            cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 3);
+            result_image, point_text, cv::Point(armor_points[j].x + 5, armor_points[j].y),
+            cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 2);
         cv::putText(
-            result_image, point_text, cv::Point(armor_points[j].x + 10, armor_points[j].y - 10),
-            cv::FONT_HERSHEY_SIMPLEX, 0.6, point_colors[j], 2);
+            result_image, point_text, cv::Point(armor_points[j].x + 5, armor_points[j].y),
+            cv::FONT_HERSHEY_SIMPLEX, 0.6, point_colors[j], 1);
 
         RCLCPP_INFO(this->get_logger(), "Armor:%s, Point(%s): (%.1f, %.1f)",
                     class_name.c_str(), point_names[j].c_str(),

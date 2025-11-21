@@ -6,8 +6,7 @@
 #define isFP16 true
 #define warmup true
 
-
-YOLOv11::YOLOv11(string model_path, nvinfer1::ILogger& logger)
+YOLOv11::YOLOv11(string model_path, nvinfer1::ILogger &logger)
 {
     // Deserialize an engine
     if (model_path.find(".onnx") == std::string::npos)
@@ -26,14 +25,13 @@ YOLOv11::YOLOv11(string model_path, nvinfer1::ILogger& logger)
 
     // Define input dimensions (这部分逻辑 init 函数中已经更完整地实现了)
     // 在 TensorRT 10 中，这部分逻辑应该在引擎和上下文创建后，与缓冲区分配一起进行。
-    const char* input_name = engine->getIOTensorName(0);
+    const char *input_name = engine->getIOTensorName(0);
     auto input_dims = engine->getTensorShape(input_name);
     input_h = input_dims.d[2];
     input_w = input_dims.d[3];
 }
 
-
-void YOLOv11::init(std::string engine_path, nvinfer1::ILogger& logger)
+void YOLOv11::init(std::string engine_path, nvinfer1::ILogger &logger)
 {
     // Read the engine file
     ifstream engineStream(engine_path, ios::binary);
@@ -52,8 +50,8 @@ void YOLOv11::init(std::string engine_path, nvinfer1::ILogger& logger)
     // --- MODIFICATION START ---
     // 使用新的 API 获取输入输出维度
     // Get input and output tensor names
-    const char* input_name = engine->getIOTensorName(0);
-    const char* output_name = engine->getIOTensorName(1);
+    const char *input_name = engine->getIOTensorName(0);
+    const char *output_name = engine->getIOTensorName(1);
 
     // Get input and output sizes of the model
     auto input_dims = engine->getTensorShape(input_name);
@@ -64,7 +62,7 @@ void YOLOv11::init(std::string engine_path, nvinfer1::ILogger& logger)
     detection_attribute_size = output_dims.d[1];
     num_detections = output_dims.d[2];
     // --- MODIFICATION END ---
-    
+
     num_classes = detection_attribute_size - 4;
 
     // Initialize input buffers
@@ -72,7 +70,7 @@ void YOLOv11::init(std::string engine_path, nvinfer1::ILogger& logger)
     CUDA_CHECK(cudaMalloc(&gpu_buffers[0], 3 * input_w * input_h * sizeof(float)));
     // Initialize output buffer
     CUDA_CHECK(cudaMalloc(&gpu_buffers[1], detection_attribute_size * num_detections * sizeof(float)));
-    
+
     // --- MODIFICATION START ---
     // 为 enqueueV3 绑定缓冲区地址
     // This is the new requirement for enqueueV3
@@ -84,8 +82,10 @@ void YOLOv11::init(std::string engine_path, nvinfer1::ILogger& logger)
 
     CUDA_CHECK(cudaStreamCreate(&stream));
 
-    if (warmup) {
-        for (int i = 0; i < 10; i++) {
+    if (warmup)
+    {
+        for (int i = 0; i < 10; i++)
+        {
             this->infer();
         }
         printf("model warmup 10 times\n");
@@ -108,7 +108,8 @@ YOLOv11::~YOLOv11()
     delete runtime;
 }
 
-void YOLOv11::preprocess(Mat& image) {
+void YOLOv11::preprocess(Mat &image)
+{
     // Preprocessing data on gpu
     cuda_preprocess(image.ptr(), image.cols, image.rows, gpu_buffers[0], input_w, input_h, stream);
     CUDA_CHECK(cudaStreamSynchronize(stream));
@@ -123,7 +124,7 @@ void YOLOv11::infer()
     // --- MODIFICATION END ---
 }
 
-void YOLOv11::postprocess(vector<Detection>& output)
+void YOLOv11::postprocess(vector<Detection> &output)
 {
     // Memcpy from device output buffer to host output buffer
     CUDA_CHECK(cudaMemcpyAsync(cpu_output_buffer, gpu_buffers[1], num_detections * detection_attribute_size * sizeof(float), cudaMemcpyDeviceToHost, stream));
@@ -135,13 +136,15 @@ void YOLOv11::postprocess(vector<Detection>& output)
 
     const Mat det_output(detection_attribute_size, num_detections, CV_32F, cpu_output_buffer);
 
-    for (int i = 0; i < det_output.cols; ++i) {
+    for (int i = 0; i < det_output.cols; ++i)
+    {
         const Mat classes_scores = det_output.col(i).rowRange(4, 4 + num_classes);
         Point class_id_point;
         double score;
         minMaxLoc(classes_scores, nullptr, &score, nullptr, &class_id_point);
 
-        if (score > conf_threshold) {
+        if (score > conf_threshold)
+        {
             const float cx = det_output.at<float>(0, i);
             const float cy = det_output.at<float>(1, i);
             const float ow = det_output.at<float>(2, i);
@@ -173,7 +176,7 @@ void YOLOv11::postprocess(vector<Detection>& output)
     }
 }
 
-void YOLOv11::build(std::string onnxPath, nvinfer1::ILogger& logger)
+void YOLOv11::build(std::string onnxPath, nvinfer1::ILogger &logger)
 {
     auto builder = createInferBuilder(logger);
 
@@ -181,17 +184,17 @@ void YOLOv11::build(std::string onnxPath, nvinfer1::ILogger& logger)
     // The createNetworkV2 function requires one argument of type NetworkDefinitionCreationFlags.
     // In TensorRT 10+, explicit batch is the only and default mode, making the kEXPLICIT_BATCH enum deprecated.
     // The correct way to create a network with default behavior is to pass 0U.
-    INetworkDefinition* network = builder->createNetworkV2(0U);
+    INetworkDefinition *network = builder->createNetworkV2(0U);
 
-    IBuilderConfig* config = builder->createBuilderConfig();
+    IBuilderConfig *config = builder->createBuilderConfig();
     if (isFP16)
     {
         config->setFlag(BuilderFlag::kFP16);
     }
-    
-    nvonnxparser::IParser* parser = nvonnxparser::createParser(*network, logger);
+
+    nvonnxparser::IParser *parser = nvonnxparser::createParser(*network, logger);
     bool parsed = parser->parseFromFile(onnxPath.c_str(), static_cast<int>(nvinfer1::ILogger::Severity::kINFO));
-    IHostMemory* plan{ builder->buildSerializedNetwork(*network, *config) };
+    IHostMemory *plan{builder->buildSerializedNetwork(*network, *config)};
 
     runtime = createInferRuntime(logger);
     engine = runtime->deserializeCudaEngine(plan->data(), plan->size());
@@ -205,12 +208,13 @@ void YOLOv11::build(std::string onnxPath, nvinfer1::ILogger& logger)
     delete builder;
 }
 
-bool YOLOv11::saveEngine(const std::string& onnxpath)
+bool YOLOv11::saveEngine(const std::string &onnxpath)
 {
     // Create an engine path from onnx path
     std::string engine_path;
     size_t dotIndex = onnxpath.find_last_of(".");
-    if (dotIndex != std::string::npos) {
+    if (dotIndex != std::string::npos)
+    {
         engine_path = onnxpath.substr(0, dotIndex) + ".engine";
     }
     else
@@ -221,7 +225,7 @@ bool YOLOv11::saveEngine(const std::string& onnxpath)
     // Save the engine to the path
     if (engine)
     {
-        nvinfer1::IHostMemory* data = engine->serialize();
+        nvinfer1::IHostMemory *data = engine->serialize();
         std::ofstream file;
         file.open(engine_path, std::ios::binary | std::ios::out);
         if (!file.is_open())
@@ -229,7 +233,7 @@ bool YOLOv11::saveEngine(const std::string& onnxpath)
             std::cout << "Create engine file" << engine_path << " failed" << std::endl;
             return 0;
         }
-        file.write((const char*)data->data(), data->size());
+        file.write((const char *)data->data(), data->size());
         file.close();
 
         delete data;
@@ -237,18 +241,23 @@ bool YOLOv11::saveEngine(const std::string& onnxpath)
     return true;
 }
 
-void YOLOv11::draw(Mat& image, Mat& result_image,const vector<Detection>& output)
+std::vector<Detection> YOLOv11::detect(Mat &image)
 {
-    const float ratio_h = input_h / (float)image.rows;
-    const float ratio_w = input_w / (float)image.cols;
+    // 创建一个空的 vector 用于存储检测结果
+    std::vector<Detection> detections;
 
-    for (int i = 0; i < output.size(); i++)
+    // 调用已有的成员函数来执行检测步骤
+    this->preprocess(image);
+    this->infer();
+    this->postprocess(detections);
+
+    // 坐标映射
+    float ratio_h = input_h / (float)image.rows;
+    float ratio_w = input_w / (float)image.cols;
+
+    for (auto &detection : detections)
     {
-        auto detection = output[i];
-        auto box = detection.bbox;
-        auto class_id = detection.class_id;
-        auto conf = detection.conf;
-        cv::Scalar color = cv::Scalar(COLORS[class_id][0], COLORS[class_id][1], COLORS[class_id][2]);
+        Rect &box = detection.bbox;
 
         if (ratio_h > ratio_w)
         {
@@ -264,6 +273,21 @@ void YOLOv11::draw(Mat& image, Mat& result_image,const vector<Detection>& output
             box.width = box.width / ratio_h;
             box.height = box.height / ratio_h;
         }
+    }
+
+    // 返回填充好的检测结果
+    return detections;
+}
+
+void YOLOv11::draw(Mat& image, Mat& result_image, const vector<Detection>& output)
+{
+    for (int i = 0; i < output.size(); i++)
+    {
+        auto detection = output[i];
+        auto box = detection.bbox;
+        auto class_id = detection.class_id;
+        auto conf = detection.conf;
+        cv::Scalar color = cv::Scalar(COLORS[class_id][0], COLORS[class_id][1], COLORS[class_id][2]);
 
         rectangle(result_image, Point(box.x, box.y), Point(box.x + box.width, box.y + box.height), color, 3);
 
@@ -274,18 +298,4 @@ void YOLOv11::draw(Mat& image, Mat& result_image,const vector<Detection>& output
         rectangle(result_image, text_rect, color, FILLED);
         putText(result_image, class_string, Point(box.x, box.y), FONT_HERSHEY_DUPLEX, 0.75, Scalar(0, 0, 0), 2, 0);
     }
-}
-
-std::vector<Detection> YOLOv11::detect(Mat& image)
-{
-    // 1. 创建一个空的 vector 用于存储检测结果
-    std::vector<Detection> detections;
-
-    // 2. 调用已有的成员函数来执行检测步骤
-    this->preprocess(image);
-    this->infer();
-    this->postprocess(detections);
-
-    // 3. 返回填充好的检测结果
-    return detections;
 }

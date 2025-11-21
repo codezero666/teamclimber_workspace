@@ -30,7 +30,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "%s节点已经启动.", name.c_str());
 
     // 初始化YOLO模型，使用智能指针
-    const std::string engine_file_path = "/home/zoupeng/teamclimber_workspace/src/teamclimber_challenge/models/best.engine";
+    const std::string engine_file_path = "/home/zoupeng/teamclimber_workspace/src/teamclimber_challenge/models/2/best.engine";
     try
     {
       model = std::make_unique<YOLOv11>(engine_file_path, logger);
