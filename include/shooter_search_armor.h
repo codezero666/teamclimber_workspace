@@ -14,6 +14,7 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 
+#include "referee_pkg/srv/hit_armor.hpp"
 #include "shape_tools.h"
 #include "YOLOv11.h"
 
@@ -39,7 +40,7 @@ public:
         kf.measurementMatrix = cv::Mat::zeros(1, 3, CV_32F);
         kf.measurementMatrix.at<float>(0) = 1.0f;
 
-        // 过程噪声 Q (根据测试调参) 
+        // 过程噪声 Q (根据测试调参)
         cv::setIdentity(kf.processNoiseCov, cv::Scalar::all(1e-2));
         kf.processNoiseCov.at<float>(2, 2) = 1e-2;
 
@@ -81,15 +82,15 @@ public:
         }
 
         // 1. 预测
-        kf.transitionMatrix.at<float>(0, 1) = (float)dt;                // 速度对位置的影响
-        kf.transitionMatrix.at<float>(0, 2) = 0.5f * (float)dt * dt;    // 加速度对位置的影响
-        kf.transitionMatrix.at<float>(1, 2) = (float)dt;                // 加速度对速度的影响
+        kf.transitionMatrix.at<float>(0, 1) = (float)dt;             // 速度对位置的影响
+        kf.transitionMatrix.at<float>(0, 2) = 0.5f * (float)dt * dt; // 加速度对位置的影响
+        kf.transitionMatrix.at<float>(1, 2) = (float)dt;             // 加速度对速度的影响
 
         kf.predict();
 
         // 2. 校正
         cv::Mat measurement = cv::Mat(1, 1, CV_32F);
-        measurement.at<float>(0) = (float)input; //把YOLO和PnP算出来的真实坐标填入这个矩阵
+        measurement.at<float>(0) = (float)input; // 把YOLO和PnP算出来的真实坐标填入这个矩阵
         kf.correct(measurement);
 
         last_time = current_time;
@@ -109,9 +110,9 @@ public:
 // ================弹道解算器==================
 struct BallisticSolution
 {
-    double pitch;           // 仰角
-    double time_of_flight;  // 弹丸飞行时间
-    bool has_solution;      // 是否有解
+    double pitch;          // 仰角
+    double time_of_flight; // 弹丸飞行时间
+    bool has_solution;     // 是否有解
 };
 
 class BallisticSolver
@@ -130,7 +131,8 @@ public:
         double delta = B * B - 4 * A * C;
 
         // 无解判断
-        if (delta < 0)return sol;
+        if (delta < 0)
+            return sol;
 
         double tan_theta = (-B - std::sqrt(delta)) / (2 * A);
         sol.pitch = std::atan(tan_theta);
@@ -162,8 +164,12 @@ public:
             return;
         }
 
+        // 订阅摄像头话题
         Image_sub = this->create_subscription<sensor_msgs::msg::Image>(
             "/camera/image_raw", 10, std::bind(&shooter_node::callback_search_armor, this, std::placeholders::_1));
+
+        // 创建客户端
+        //client_ = this->create_client<example_interfaces::srv::>(" /referee/hit_arror");
     }
 
     ~shooter_node() { cv::destroyWindow("Detection Result"); }
@@ -182,12 +188,12 @@ private:
     BallisticSolver ballistic_solver;
 
     // 参数管理
-    double fx = 554.383, fy = 554.383, cx = 320.0, cy = 320.0; //相机内参
-    double real_width = 0.705;      // 装甲板真实宽度 (米)
-    double real_height = 0.520;     // 装甲板真实高度 (米)
-    double bullet_speed = 10.0;    // 子弹初速度 (米/秒)
-    double gravity_a = 9.8;         // 重力加速度
-    double system_latency = 0.02;    // 系统总延迟 (图像处理+通信耗时)
+    double fx = 554.383, fy = 554.383, cx = 320.0, cy = 320.0; // 相机内参
+    double real_width = 0.705;                                 // 装甲板真实宽度 (米)
+    double real_height = 0.520;                                // 装甲板真实高度 (米)
+    double bullet_speed = 10.0;                                // 子弹初速度 (米/秒)
+    double gravity_a = 9.8;                                    // 重力加速度
+    double system_latency = 0.02;                              // 系统总延迟 (图像处理+通信耗时)
 };
 
 #endif

@@ -1,11 +1,9 @@
 #include "image_deal.h"
 #include "shape_tools.h"
-#include "YOLOv11.h"
 
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
-#include <string>
 
 Logger logger;
 

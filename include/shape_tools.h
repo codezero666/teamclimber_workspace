@@ -8,14 +8,15 @@
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
 #include <geometry_msgs/msg/point.hpp>
-#include <referee_pkg/msg/multi_object.hpp>
-#include <referee_pkg/msg/object.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/timer.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 #include <std_msgs/msg/header.hpp>
+
+#include "referee_pkg/msg/multi_object.hpp"
+#include "referee_pkg/msg/object.hpp"
 
 class shape_tools
 {

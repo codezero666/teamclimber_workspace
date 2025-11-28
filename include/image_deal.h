@@ -42,10 +42,12 @@ public:
       return;
     }
 
+    // 订阅摄像头话题
     Image_sub = this->create_subscription<sensor_msgs::msg::Image>(
         "/camera/image_raw", 10,
         bind(&vision_node::callback_camera, this, std::placeholders::_1));
 
+    // 发布识别信息话题
     Target_pub = this->create_publisher<referee_pkg::msg::MultiObject>(
         "/vision/target", 10);
 
