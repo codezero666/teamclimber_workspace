@@ -8,6 +8,14 @@ struct DetectedArmor
     double height;
 };
 
+// 服务端回调函数
+void handle_armor_shoot(const std::shared_ptr<referee_pkg::srv::HitArmor::Request> request,
+                        std::shared_ptr<referee_pkg::srv::HitArmor::Response> response)
+{
+    response->;
+};
+
+// 图像回调函数
 void shooter_node::callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg)
 {
     try
@@ -30,7 +38,8 @@ void shooter_node::callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg)
         }
 
         cv::Mat image = cv_ptr->image;
-        if (image.empty())return;
+        if (image.empty())
+            return;
         cv::Mat result_image = image.clone();
 
         // 2. YOLO模型识别检测
@@ -79,7 +88,7 @@ void shooter_node::callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg)
                 // Cam -> Gazebo/World
                 double raw_x = x_c;
                 double raw_y = z_c;
-                double raw_z = -y_c - 0.2; //0.2是z轴测量计算平均误差
+                double raw_z = -y_c - 0.2; // 0.2是z轴测量计算平均误差
 
                 // 打印目标当前的仿真世界中的坐标
                 RCLCPP_INFO(this->get_logger(), "Target:[%.2f,%.2f,%.2f]", raw_x, raw_y, raw_z);
@@ -146,6 +155,10 @@ void shooter_node::callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg)
                 double final_yaw = std::atan2(hit_y, hit_x);
 
                 RCLCPP_INFO(this->get_logger(), "Yaw:%.2f Pitch:%.2f Time:%.2f", final_yaw, final_pitch, t_flight);
+
+                // 记录欧拉角用于返回客户端
+                latest_yaw = final_yaw;
+                latest_pitch = final_pitch;
 
                 //================结果可视化（PnP反解）===================
                 double aim_xc = hit_x;

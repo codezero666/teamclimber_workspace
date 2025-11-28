@@ -58,11 +58,11 @@ public:
   ~vision_node() { cv::destroyWindow("Detection Result"); }
 
 private:
+  // 回调函数
   void callback_camera(sensor_msgs::msg::Image::SharedPtr msg);
 
-  // 模型创建
+  // 声明模型、订阅者、发布者
   std::unique_ptr<YOLOv11> model;
-
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr Image_sub;
   rclcpp::Publisher<referee_pkg::msg::MultiObject>::SharedPtr Target_pub;
 

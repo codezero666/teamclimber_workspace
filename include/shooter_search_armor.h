@@ -147,6 +147,7 @@ public:
 class shooter_node : public rclcpp::Node
 {
 public:
+    // 节点构造函数
     shooter_node(std::string name) : Node(name)
     {
         RCLCPP_INFO(this->get_logger(), "%s节点已经启动.", name.c_str());
@@ -168,24 +169,35 @@ public:
         Image_sub = this->create_subscription<sensor_msgs::msg::Image>(
             "/camera/image_raw", 10, std::bind(&shooter_node::callback_search_armor, this, std::placeholders::_1));
 
-        // 创建客户端
-        //client_ = this->create_client<example_interfaces::srv::>(" /referee/hit_arror");
+        // 创建服务端
+        armor_shooter_server_ = this->create_service<referee_pkg::srv::HitArmor>(
+            "/referee/hit_arror", std::bind(&shooter_node::handle_armor_shoot, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     ~shooter_node() { cv::destroyWindow("Detection Result"); }
 
 private:
+    // 回调函数
+    void handle_armor_shoot(const std::shared_ptr<referee_pkg::srv::HitArmor::Request> request,
+                            std::shared_ptr<referee_pkg::srv::HitArmor::Response> response);
     void callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg);
 
+    // 声明模型、TensorRT日志、订阅者、服务端
     std::unique_ptr<YOLOv11> model;
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr Image_sub;
     Logger logger_;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr Image_sub;
+    rclcpp::Service<referee_pkg::srv::HitArmor>::SharedPtr armor_shooter_server_;
 
     // 定义三个轴的卡尔曼预测器 (X, Y, Z 独立预测)
     Kalman1D pred_x;
     Kalman1D pred_y;
     Kalman1D pred_z;
     BallisticSolver ballistic_solver;
+
+    // 记录欧拉角
+    double latest_yaw = 0.0;   // 最新的偏航角
+    double latest_pitch = 0.0; // 最新的俯仰角
+    double latest_roll = 0.0;  // 最新的翻滚角
 
     // 参数管理
     double fx = 554.383, fy = 554.383, cx = 320.0, cy = 320.0; // 相机内参
