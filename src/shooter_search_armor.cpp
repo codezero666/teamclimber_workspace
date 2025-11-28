@@ -21,7 +21,7 @@ void shooter_node::handle_armor_shoot(const std::shared_ptr<referee_pkg::srv::Hi
     RCLCPP_INFO(this->get_logger(), "【Service】Yaw:%.2f Pitch:%.2f", latest_yaw, latest_pitch);
 
     // 返回
-    response->yaw = atest_yaw;
+    response->yaw = latest_yaw;
     response->pitch = latest_pitch;
     response->roll = latest_roll;
 };
