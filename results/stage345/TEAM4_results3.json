@@ -1,48 +1,48 @@
 {
     "RaceStage3": [
         {
-            "average_numdetecterror": 0.429,
+            "average_numdetecterror": 0.424,
             "average_orientationerror": 3.14,
-            "fps": 43,
+            "fps": 40,
             "max_numdetecterror": 999.0,
             "max_orientationerror": 3.14,
-            "run_id": "c0ae925a-8911-42d2-bb5d-8a51db6c57c2",
+            "run_id": "f2d24ac3-42a3-4436-a6d9-0a7184d32813",
             "score": 0.0,
             "target_type": "armor_red_2",
-            "timestamp": "2025-11-29T16:54:29Z"
+            "timestamp": "2025-11-29T17:52:33Z"
         },
         {
             "average_numdetecterror": 0.236,
             "average_orientationerror": 1.665,
-            "fps": 43,
+            "fps": 40,
             "max_numdetecterror": 0.236,
             "max_orientationerror": 1.665,
-            "run_id": "cf2844c9-997f-44c1-87e5-ee47eb98137a",
+            "run_id": "efb6f9ad-b571-4a5a-b051-a4c529402ee2",
             "score": 12.0,
             "target_type": "armor_red_1",
-            "timestamp": "2025-11-29T16:54:29Z"
+            "timestamp": "2025-11-29T17:52:33Z"
         },
         {
             "average_numdetecterror": 0.236,
             "average_orientationerror": 3.14,
-            "fps": 43,
+            "fps": 40,
             "max_numdetecterror": 999.0,
             "max_orientationerror": 3.14,
-            "run_id": "a94a571e-55a4-4200-9517-032879a52ff9",
+            "run_id": "e4030f5b-142e-413e-a0fd-d5eef46f952d",
             "score": 0.0,
             "target_type": "armor_red_3",
-            "timestamp": "2025-11-29T16:54:29Z"
+            "timestamp": "2025-11-29T17:52:33Z"
         },
         {
-            "average_numdetecterror": 0.429,
-            "average_orientationerror": 1.639,
-            "fps": 43,
+            "average_numdetecterror": 0.424,
+            "average_orientationerror": 1.64,
+            "fps": 40,
             "max_numdetecterror": 0.452,
             "max_orientationerror": 1.664,
-            "run_id": "de35cee4-7d55-4fa3-852c-c90d2ce7267a",
+            "run_id": "81c5e6cd-6fef-412b-a8b5-33b2b4bf3716",
             "score": 10.0,
             "target_type": "armor_red_4",
-            "timestamp": "2025-11-29T16:54:29Z"
+            "timestamp": "2025-11-29T17:52:33Z"
         }
     ],
     "team_name": "TEAM4"

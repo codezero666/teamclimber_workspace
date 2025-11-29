@@ -108,7 +108,7 @@ void shooter_node::callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg)
                     // Cam -> Gazebo/World
                     double raw_x = x_c;
                     double raw_y = z_c;
-                    double raw_z = -y_c; // 0.2是z轴测量计算平均误差
+                    double raw_z = -y_c + 0.2; // 0.2是z轴测量计算平均误差
 
                     // 打印目标当前的仿真世界中的坐标
                     RCLCPP_INFO(this->get_logger(), "Target:[%.2f,%.2f,%.2f]", raw_x, raw_y, raw_z);
@@ -172,7 +172,7 @@ void shooter_node::callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg)
                     }
 
                     // 计算偏航角
-                    double final_yaw = std::atan2(hit_y, hit_x);
+                    double final_yaw = std::atan(hit_x/hit_y);
 
                     // 记录欧拉角用于返回客户端
                     std::lock_guard<std::mutex> lock(data_mutex_); // 解锁
@@ -183,7 +183,7 @@ void shooter_node::callback_search_armor(sensor_msgs::msg::Image::SharedPtr msg)
                     //================结果可视化（PnP反解）===================
                     double aim_xc = hit_x;
                     double aim_zc = hit_y;
-                    double aim_yc = -hit_z;
+                    double aim_yc = -(hit_z + 0.2);
 
                     // 绿色十字（预测击中点）
                     cv::Point2f aim_point_green;
